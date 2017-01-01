@@ -11,7 +11,7 @@ This script process all available fitbit data and consolidate a dataframe for fu
 # run date
 Abbreviation:
 h: heart rate
-s: step
+s: step®
 """
 import pandas as pd
 from pandas.io.json import json_normalize
@@ -43,7 +43,7 @@ today = config.get('default', 'today')
 weeks_to_pull = int(config.get('default', 'weeks_to_pull'))
 
 train_start_date = pd.to_datetime(today) - DateOffset(days=pd.to_datetime(today).dayofweek) - DateOffset(weeks=weeks_to_pull)
-train_date_range = pd.date_range(train_start_date, periods=(7 * weeks_to_pull), freq='D').strftime('%Y-%m-%d')
+train_date_range = pd.date_range(train_start_date, periods=(8 * weeks_to_pull), freq='D').strftime('%Y-%m-%d')
 
 current_start_date = pd.to_datetime(today) - DateOffset(days=pd.to_datetime(today).dayofweek)
 current_date_range = pd.date_range(current_start_date, periods=pd.to_datetime(today).dayofweek + 1, freq='D').strftime('%Y-%m-%d')
