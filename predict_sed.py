@@ -29,13 +29,13 @@ sed_train = pd.read_csv(sed_train_filename, index_col='time_of_day', header=0, e
 sed_train = sed_train.reset_index()
 
 print(len(sed_train))
-sed_test = sed_train[-792:]
+sed_test = sed_train[-96:]
 sed_test = sed_test.reset_index()
-sed_train = sed_train[:2376]
+sed_train = sed_train[:2976]
 
 
 def predict_sed(train, test):
-    features = ['1', '2', '3', '4', '5', '6', '7']
+    features = ['1', '2', '3']
     y = train['sed_prolong']
     x = train[features]
     tree = DecisionTreeClassifier(min_samples_split=50)
@@ -56,8 +56,17 @@ def predict_sed(train, test):
 
 
 results = predict_sed(sed_train, sed_test)
-
-results_sed = results[results['value'] > 0]
+print(len(results))
+results_sed = results[(results['predicted'] > 0) & (results['value'] > 0)]
 print(results_sed)
+print(len(results_sed))
 score = sum(results_sed['predicted'] == results_sed['value']) / len(results_sed)
 print(score)
+
+from matplotlib import pyplot
+# pyplot.plot(results['predicted'])sd
+# pyplot.show()
+
+pyplot.plot(results['value'], color='red')
+pyplot.show()
+
