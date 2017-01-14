@@ -87,7 +87,7 @@ def get_sedentary_behavior(train):
 # get training data
 sed_train = get_sedentary_behavior(fitbit_train)
 
-print(sed_train[sed_train['sed_prolong'] == 1])
+# print(sed_train[sed_train['sed_prolong'] == 1])
 
 # transform dataframes for autoregressive modelling
 from matplotlib import pyplot
@@ -106,9 +106,17 @@ ar_sed_series = ar_sed_series.astype(float)
 # pyplot.show()
 # plot time-lag autocorrelation with 95% CI
 from statsmodels.graphics.tsaplots import plot_acf
-plot_acf(ar_sed_series, lags=450, alpha=.05)
-pyplot.show()
+# plot_acf(ar_sed_series, lags=450, alpha=.05)
+# pyplot.show()
 
+
+# get autocorrelation coefficient
+import statsmodels.tsa.stattools as smtsa
+acf = smtsa.acf(sed_train['sed_prolong'], nlags=len(ar_sed_series), unbiased=True)
+# print(acf[[96, 192, 288]])
+for i in range(len(acf)):
+    if acf[i] > .5:
+        print('the %d th %s lag has coefficient %f' % (range(len(acf))[i], str(ar_sed.index[i]), acf[i]))
 # determine features for training decision tree
 
 # transform dataframes to training data structure
