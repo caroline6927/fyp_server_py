@@ -11,7 +11,7 @@ This script process all available fitbit data and consolidate a dataframe for fu
 # run date
 Abbreviation:
 h: heart rate
-s: step®
+s: step
 """
 import pandas as pd
 from pandas.io.json import json_normalize

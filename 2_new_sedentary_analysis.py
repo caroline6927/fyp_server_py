@@ -111,14 +111,67 @@ from statsmodels.graphics.tsaplots import plot_acf
 
 
 # get autocorrelation coefficient
+import numpy as np
+from scipy.optimize import leastsq
+import pylab as plt
+
 import statsmodels.tsa.stattools as smtsa
+
 acf = smtsa.acf(sed_train['sed_prolong'], nlags=len(ar_sed_series), unbiased=True)
 # print(acf[[96, 192, 288]])
-for i in range(len(acf)):
-    if acf[i] > .5:
-        print('the %d th %s lag has coefficient %f' % (range(len(acf))[i], str(ar_sed.index[i]), acf[i]))
+# for i in range(len(acf)):
+#     if acf[i] > .5:
+#         print('the %d th %s lag has coefficient %f' % (range(len(acf))[i], str(ar_sed.index[i]), acf[i]))
 # determine features for training decision tree
+# only use one week's data points
+acf = acf[:1000]
+t = np.array(range(len(acf)))
+data = acf  # ndarray
+data_guess = [3 * np.std(data) / (2 ** 0.5), 2 * np.pi / 100, np.pi / 2, np.mean(data), -0.0025, -0.0025]  # std, freq, phase, mean, slope
 
+
+def get_sin_model(guess, t, data):
+    # This functions models
+    guess_std = guess[0]
+    guess_freq = guess[1]
+    guess_phase = guess[2]
+    guess_mean = guess[3]
+    guess_slope1 = guess[4]
+    guess_slope2 = guess[5]
+    data_first_guess = guess_std * np.exp(guess_slope1*t) * np.sin(np.exp(guess_slope2*t)* guess_freq * t + guess_phase) + guess_mean
+    optimize_func = lambda x: x[0] * np.exp(x[4]*t) * np.sin(np.exp(x[5]*t) * x[1] * t + x[2]) + x[3] - data
+    est_std, est_freq, est_phase, est_mean, est_slope1, est_slope2 = leastsq(optimize_func, [guess_std, guess_freq, guess_phase, guess_mean, guess_slope1, guess_slope2])[0]
+    # recreate the fitted curve using the optimized parameters
+    data_fit = est_std * np.exp(est_slope1*t) * np.sin(np.exp(est_slope2*t)*est_freq * t + est_phase) + est_mean
+
+    print('fitted std, freq, phase, mean, slope are %f %f %f %f %f %f' % (est_std, est_freq, est_phase, est_mean, est_slope1, est_slope2))
+    print("thus, the desired interval should be approximately %f day" % (2*np.pi/est_freq/96))
+    estimation = [est_std, est_freq, est_phase, est_mean,est_slope1, est_slope2]
+    # plot results
+    plt.plot(data, '.')
+    plt.plot(data_fit, label='after fitting')
+    plt.plot(data_first_guess, label='first guess')
+    plt.legend()
+    plt.show()
+
+    return estimation
+
+get_sin_model(data_guess, t, data)
+
+def days_to_include(auto_corr, interval):
+    pointer = interval
+    feature_position_list = []
+    while pointer <= len(auto_corr):
+
+        if auto_corr[pointer] >= 0.4:  #TODO: how to determine the cut-off value for correlation coefficient
+            feature_position_list.append(pointer)
+
+        pointer += interval
+    print("this is the features' position list:")
+    print(feature_position_list)
+    return feature_position_list
+
+days_to_include(acf, 96)
 # transform dataframes to training data structure
 
 # perform decision tree modeling
